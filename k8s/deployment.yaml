@@ -1,0 +1,237 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paradise-bakes-cafe
+  labels:
+    app: paradise-bakes-cafe
+    version: v1.0.0
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: paradise-bakes-cafe
+  template:
+    metadata:
+      labels:
+        app: paradise-bakes-cafe
+        version: v1.0.0
+    spec:
+      containers:
+      - name: paradise-app
+        image: paradise-bakes-cafe:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3000"
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: paradise-config
+              key: DB_HOST
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: paradise-config
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: paradise-secrets
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: paradise-secrets
+              key: DB_PASSWORD
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: paradise-secrets
+              key: JWT_SECRET
+        - name: SESSION_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: paradise-secrets
+              key: SESSION_SECRET
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: uploads-volume
+          mountPath: /app/uploads
+        - name: logs-volume
+          mountPath: /app/logs
+      volumes:
+      - name: uploads-volume
+        persistentVolumeClaim:
+          claimName: paradise-uploads-pvc
+      - name: logs-volume
+        persistentVolumeClaim:
+          claimName: paradise-logs-pvc
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paradise-service
+  labels:
+    app: paradise-bakes-cafe
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: paradise-bakes-cafe
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: paradise-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "10"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+spec:
+  tls:
+  - hosts:
+    - paradisebakescafe.com
+    - www.paradisebakescafe.com
+    secretName: paradise-tls
+  rules:
+  - host: paradisebakescafe.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: paradise-service
+            port:
+              number: 80
+  - host: www.paradisebakescafe.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: paradise-service
+            port:
+              number: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: paradise-config
+data:
+  DB_HOST: "paradise-mongodb-service"
+  DB_NAME: "pbc_database"
+  APP_NAME: "Paradise Bakes & Cafe"
+  APP_URL: "https://paradisebakescafe.com"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: paradise-secrets
+type: Opaque
+data:
+  DB_USER: c2hha2ls  # shakil (base64 encoded)
+  DB_PASSWORD: U2ltcGxlNG1lMSE=  # Simple4me1! (base64 encoded)
+  JWT_SECRET: cGFyYWRpc2VfYmFrZXNfY2FmZV9qd3Rfc2VjcmV0XzIwMjRfc2VjdXJlX2tleQ==  # paradise_bakes_cafe_jwt_secret_2024_secure_key (base64 encoded)
+  SESSION_SECRET: cGFyYWRpc2VfYmFrZXNfY2FmZV9zZXNzaW9uX3NlY3JldF8yMDI0  # paradise_bakes_cafe_session_secret_2024 (base64 encoded)
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: paradise-uploads-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: gp2
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: paradise-logs-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: gp2
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: paradise-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: paradise-bakes-cafe
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60

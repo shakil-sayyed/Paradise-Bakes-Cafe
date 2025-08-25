@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#8B4513" />
+    <meta name="description" content="Paradise Bakes & Cafe - Pure Vegetarian Delights. Experience the finest pure vegetarian cakes, pastries, pizzas, burgers, and sandwiches in Pimple Gurav, Pune." />
+    <meta name="keywords" content="vegetarian cafe, cakes, pastries, pizza, burger, sandwich, pune, pimple gurav, pure veg, bakery" />
+    <meta name="author" content="Paradise Bakes & Cafe" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://paradisebakescafe.com/" />
+    <meta property="og:title" content="Paradise Bakes & Cafe - Pure Vegetarian Delights" />
+    <meta property="og:description" content="Experience the finest pure vegetarian cakes, pastries, pizzas, burgers, and sandwiches. Located in Pimple Gurav, Pune." />
+    <meta property="og:image" content="%PUBLIC_URL%/og-image.jpg" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://paradisebakescafe.com/" />
+    <meta property="twitter:title" content="Paradise Bakes & Cafe - Pure Vegetarian Delights" />
+    <meta property="twitter:description" content="Experience the finest pure vegetarian cakes, pastries, pizzas, burgers, and sandwiches. Located in Pimple Gurav, Pune." />
+    <meta property="twitter:image" content="%PUBLIC_URL%/og-image.jpg" />
+
+    <!-- Business Information -->
+    <meta name="business:contact:phone" content="8208540270, 8698793746, 9970458278" />
+    <meta name="business:contact:email" content="info@paradisebakescafe.com" />
+    <meta name="business:contact:address" content="Sudarshan Nagar, Lane 5 (Corner), Market Road, Behind Shrushti Hotel, Pimple Gurav, Pune - 411061" />
+    
+    <!-- FSSAI Compliance -->
+    <meta name="fssai:license" content="FSSAI License Number" />
+    
+    <!-- PWA -->
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Restaurant",
+      "name": "Paradise Bakes & Cafe",
+      "description": "Pure Vegetarian Delights - Crafted with Love",
+      "url": "https://paradisebakescafe.com",
+      "telephone": ["+918208540270", "+918698793746", "+919970458278"],
+      "email": "info@paradisebakescafe.com",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Sudarshan Nagar, Lane 5 (Corner), Market Road, Behind Shrushti Hotel",
+        "addressLocality": "Pimple Gurav",
+        "addressRegion": "Pune",
+        "postalCode": "411061",
+        "addressCountry": "IN"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "18.5912",
+        "longitude": "73.7419"
+      },
+      "openingHours": "Mo-Su 08:00-22:00",
+      "servesCuisine": ["Vegetarian", "Indian", "Bakery"],
+      "priceRange": "₹₹",
+      "acceptsReservations": true,
+      "hasMenu": "https://paradisebakescafe.com/menu",
+      "sameAs": [
+        "https://www.facebook.com/paradisebakescafe",
+        "https://www.instagram.com/paradisebakescafe"
+      ]
+    }
+    </script>
+
+    <title>Paradise Bakes & Cafe - Pure Vegetarian Delights | Pimple Gurav, Pune</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    
+    <!-- Loading indicator -->
+    <div id="loading" style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #8B4513 0%, #D2691E 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.3s ease-out;
+    ">
+      <div style="text-align: center; color: white;">
+        <div style="
+          width: 60px;
+          height: 60px;
+          border: 4px solid rgba(255,255,255,0.3);
+          border-top: 4px solid white;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 20px;
+        "></div>
+        <h2 style="margin: 0; font-family: 'Playfair Display', serif; font-weight: 600;">Paradise Bakes & Cafe</h2>
+        <p style="margin: 10px 0 0; opacity: 0.9;">Pure Vegetarian Delights</p>
+      </div>
+    </div>
+
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      body {
+        margin: 0;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+          'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-color: #fafafa;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      #root {
+        min-height: 100vh;
+      }
+    </style>
+
+    <script>
+      // Hide loading screen when app is ready
+      window.addEventListener('load', function() {
+        const loading = document.getElementById('loading');
+        if (loading) {
+          loading.style.opacity = '0';
+          setTimeout(() => {
+            loading.style.display = 'none';
+          }, 300);
+        }
+      });
+
+      // Service Worker Registration
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+              console.log('SW registered: ', registration);
+            })
+            .catch(function(registrationError) {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>

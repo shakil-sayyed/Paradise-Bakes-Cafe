@@ -1,0 +1,182 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: paradise-mongodb
+  labels:
+    app: paradise-mongodb
+spec:
+  serviceName: paradise-mongodb-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paradise-mongodb
+  template:
+    metadata:
+      labels:
+        app: paradise-mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:5.0
+        ports:
+        - containerPort: 27017
+          name: mongodb
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: paradise-mongodb-secret
+              key: username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: paradise-mongodb-secret
+              key: password
+        - name: MONGO_INITDB_DATABASE
+          value: "pbc_database"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+        - name: mongodb-init
+          mountPath: /docker-entrypoint-initdb.d
+        livenessProbe:
+          exec:
+            command:
+            - mongo
+            - --eval
+            - "db.adminCommand('ping')"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - mongo
+            - --eval
+            - "db.adminCommand('ping')"
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: mongodb-init
+        configMap:
+          name: mongodb-init-script
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "gp2"
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paradise-mongodb-service
+  labels:
+    app: paradise-mongodb
+spec:
+  type: ClusterIP
+  ports:
+  - port: 27017
+    targetPort: 27017
+    protocol: TCP
+    name: mongodb
+  selector:
+    app: paradise-mongodb
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: paradise-mongodb-secret
+type: Opaque
+data:
+  username: c2hha2ls  # shakil (base64 encoded)
+  password: U2ltcGxlNG1lMSE=  # Simple4me1! (base64 encoded)
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongodb-init-script
+data:
+  init-mongo.js: |
+    // Create database and user
+    db = db.getSiblingDB('pbc_database');
+    
+    // Create collections with validation
+    db.createCollection('users', {
+      validator: {
+        $jsonSchema: {
+          bsonType: "object",
+          required: ["username", "password", "name", "role"],
+          properties: {
+            username: {
+              bsonType: "string",
+              description: "must be a string and is required"
+            },
+            password: {
+              bsonType: "string",
+              description: "must be a string and is required"
+            },
+            name: {
+              bsonType: "string",
+              description: "must be a string and is required"
+            },
+            role: {
+              enum: ["admin", "manager", "staff"],
+              description: "must be one of the enum values and is required"
+            }
+          }
+        }
+      }
+    });
+    
+    db.createCollection('business');
+    db.createCollection('orders');
+    db.createCollection('customers');
+    db.createCollection('menu');
+    
+    // Create indexes
+    db.users.createIndex({ "username": 1 }, { unique: true });
+    db.users.createIndex({ "email": 1 }, { unique: true, sparse: true });
+    db.business.createIndex({ "date": 1 }, { unique: true });
+    db.orders.createIndex({ "order_id": 1 }, { unique: true });
+    db.orders.createIndex({ "customer_id": 1 });
+    db.orders.createIndex({ "order_status": 1 });
+    db.orders.createIndex({ "created_at": 1 });
+    db.customers.createIndex({ "customer_id": 1 }, { unique: true });
+    db.customers.createIndex({ "mobile_number": 1 }, { unique: true });
+    db.customers.createIndex({ "email": 1 }, { sparse: true });
+    db.menu.createIndex({ "category": 1 });
+    db.menu.createIndex({ "name": 1 });
+    db.menu.createIndex({ "is_featured": 1 });
+    db.menu.createIndex({ "availability": 1 });
+    
+    // Create admin user if not exists
+    var adminUser = db.users.findOne({ "username": "shakil" });
+    if (!adminUser) {
+      db.users.insertOne({
+        username: "shakil",
+        password: "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.iQeO", // Paradise123!
+        name: "Shakil Admin",
+        email: "admin@paradisebakescafe.com",
+        role: "admin",
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      print("Admin user 'shakil' created successfully");
+    } else {
+      print("Admin user 'shakil' already exists");
+    }
